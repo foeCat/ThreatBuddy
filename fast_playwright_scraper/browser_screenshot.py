@@ -1,6 +1,8 @@
 import asyncio
 import os
 import random
+from urllib.parse import urlparse 
+import sys
 from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
 
@@ -29,9 +31,9 @@ class BrowserScreenshot:
         """
         self.playwright = await async_playwright().start()
 
-        proxy_config = {
-            "server": "socks5://10.236.8.92:7897"
-        }
+        # Load proxy configuration from environment variable if available
+        proxy_server = os.getenv("PLAYWRIGHT_PROXY_SERVER")
+        proxy_config = {"server": proxy_server} if proxy_server else None
 
         args = [
             "--disable-blink-features=AutomationControlled",
@@ -81,6 +83,12 @@ class BrowserScreenshot:
         await page.wait_for_timeout(random.randint(200, 500))
 
     async def screenshot_page(self, url, output_dir="screenshots", filename=None):
+        parsed = urlparse(url)
+        netloc = parsed.netloc.lower()
+        if "nvd.nist.gov" in netloc or "zhihu.com" in netloc:
+            print(f"skip: {url}", file=sys.stderr)
+            return None, None
+        
         page = await self.context.new_page()
 
         try:
@@ -113,6 +121,10 @@ class BrowserScreenshot:
                     print(f"已跳转至: {page.url}")
                 except Exception:
                     print("⚠️ 跳转超时，可能仍在中间页")
+            final_netloc = urlparse(page.url).netloc.lower()
+            if "nvd.nist.gov" in final_netloc or "zhihu.com" in final_netloc:
+                print(f"skip after redirect: {page.url}", file=sys.stderr)
+                return None, None
 
             # 模拟人类行为
             await self.simulate_human_behavior(page)
@@ -157,7 +169,7 @@ class BrowserScreenshot:
             links = []
             for el in await page.query_selector_all("ol#b_results li.b_algo h2 a"):
                 href = await el.get_attribute("href")
-                if href and href.startswith("http") and "zhihu.com" not in href:
+                if href and href.startswith("http") and "zhihu.com" not in href and "nvd.nist.gov" not in href:
                     links.append(href)
                     if len(links) >= max_results:
                         break

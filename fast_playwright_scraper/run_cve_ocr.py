@@ -3,6 +3,7 @@
 CVE OCR运行脚本 - 直接执行版
 """
 import asyncio
+from pathlib import Path
 import re
 import sys
 import random
@@ -62,9 +63,8 @@ async def main():
     print("\n" + "=" * 60)
     if results:
         # 保存结果
-        import os
-        os.makedirs("../scraped_data", exist_ok=True)
-        output_file = f"../scraped_data/{cve_id}.txt"
+        output_dir = Path(__file__).parent.parent / "scraped_data"
+        output_file = output_dir / f"{cve_id}.txt"
         with open(output_file, "w", encoding="utf-8") as f:
             for result in results:
                 f.write(f"{'='*60}\n")
