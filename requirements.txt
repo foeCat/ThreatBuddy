@@ -1,0 +1,19 @@
+# Core dependencies
+requests
+python-dotenv
+
+# Playwright for web scraping
+playwright
+playwright-stealth
+
+# OCR dependencies
+pytesseract
+Pillow
+
+# LLM and LangChain dependencies
+langchain-core
+langchain-openai
+
+# Note: Additional system dependencies are required:
+# - tesseract-ocr (install via apt/yum)
+# Run `playwright install` after installing the playwright package
